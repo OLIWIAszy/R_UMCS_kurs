@@ -1,0 +1,145 @@
+---
+title: "Mini-projekt"
+author: "Oliwia_Szykuła"
+date: "2025-07-16"
+output: html_document
+---
+
+# **Rapot końcowy, Mini Projekt**
+
+## Zbiór danych o migracji ludności polskiej, STAN, RUCH NATURALNY I WĘDRÓWKOWY LUDNOŚCI W ROKU 2024 
+
+##### https://demografia.stat.gov.pl/bazademografia/Tables.aspx
+## Wprowadzanie zbioru danych
+
+```{r message=FALSE}
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("dplyr")
+library(dplyr)
+library(readxl)
+migracje <- read_excel("panda_genom/migracje.xlsx", 
+    na = c("X","-"))
+
+```
+## Pokazanie statystyki każdego parametru
+```{r}
+summary(migracje)
+```
+
+
+
+## Porówanie liczby zgonów i urodzeń wśród kobiet i mężczyzn
+
+```{r}
+
+migracje_k_m <- migracje %>%
+  filter(grepl("_kobiety|_mężczyźni", Wyszczególnienie), !grepl("Polska", Wyszczególnienie)) %>%
+  mutate(płeć = case_when(
+    grepl("_kobiety", Wyszczególnienie) ~ "kobiety",
+    grepl("_mężczyźni", Wyszczególnienie) ~ "mężczyźni",
+    TRUE ~ NA_character_
+  ))
+
+ggplot(migracje_k_m, aes(x=Urodzenia_żywe, y=zgony_ogółem, color=płeć))+
+  geom_point(size=3)+
+  theme_minimal()+
+  scale_color_manual(values = c("kobiety" = "magenta", "mężczyźni" = "green"))+
+  labs(x="Żywe urodzenia w Polsce", y="Zgony", title = "Porówanie liczby zgonów i urodzeń wśród kobiet i mężczyzn")
+
+```
+
+#### Statystycznie w Polsce jest więcej zgonów niż urodzeń w każdym z wojewóctw.
+
+## Porównanie liczby ludność w poszczególnych wojewóctwach, względem ilości małżeństw
+
+```{r message=FALSE}
+migracje_filtrowane <- migracje %>%
+  filter(!grepl("_mężczyźni|_kobiety|POLSKA", Wyszczególnienie))
+
+migracje_filtrowane2 <- migracje_filtrowane %>%
+  mutate(
+    Liczba_ludności_mln = Liczba_ludności / 1e6,
+    Malzenstwa_tys = Małżeństwa / 1e3
+  )
+
+ggplot(migracje_filtrowane2, aes(x=Liczba_ludności_mln, y=Malzenstwa_tys, color=Wyszczególnienie))+
+  geom_point()+
+  theme_minimal()+
+  labs(x="Liczba ludności (w mln.)", y="Ilość małżeństw (w tys.)", title = "Liczba ludności, a ilość małżeństw w każdym z województw")
+
+```
+
+#### Wraz ze wzrostem ilości ludności ilość małżeństw rośnie liniowo.
+
+## Przyrost naturalny w każdym z wojewóctw
+
+```{r}
+ggplot(migracje_filtrowane2, aes(x=Wyszczególnienie, y=Przyrost_naturalny, fill = Wyszczególnienie))+
+  geom_col()+
+  coord_flip()+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  labs(x="Województwa", y="Przyrost naturalny")
+```
+
+#### Najniższy przyrost naturalny występuje w Województwie Śląskim.
+
+
+## Procent zgonów noworodków względem pozostałych
+
+```{r fig.width=10, fig.height=6}
+#install.packages("tidyr")
+library(tidyr)
+zgony <- migracje_filtrowane %>% 
+  filter(grepl("WOJ._", Wyszczególnienie)) %>% 
+  mutate(
+    zgony_reszta = zgony_ogółem - zgony_w_tym_niemowląt
+  ) %>% 
+  select(Wyszczególnienie, zgony_w_tym_niemowląt, zgony_reszta) %>% 
+  pivot_longer(
+    cols = starts_with("zgony"),
+    names_to = "Rodzaj_zgonu",
+    values_to = "Liczba"
+  )
+  
+ggplot(zgony, aes(x="", y=Liczba, fill = Rodzaj_zgonu))+
+  geom_bar(width = 0.8, stat = "identity")+
+  facet_wrap(~ Wyszczególnienie, ncol = 2)+
+  scale_fill_manual(
+    values = c("zgony_w_tym_niemowląt" = "red", "zgony_reszta" = "blue"),
+    labels = c("Pozostali","Niemowlęta")
+  ) +
+  theme_classic()+
+  labs(
+    title = "Procent zgonów niemowląt w województwach",
+    fill = "Rodzaj zgonu"
+  )
+```
+
+#### Zgony noworodków stanowią niewielki procent w porównaniu do ogólnej liczby zgonów w każdym z województw.
+
+## Porównanie migracji kobiet i mężczyzn, w Polsce
+
+```{r}
+ggplot(migracje_k_m, aes(
+  x=płeć, y=Migracje_na_pobyt_stały_saldo_migracji_wewnętrznych, fill=płeć))+
+  geom_boxplot()+
+  theme_minimal()+
+  labs(x="Płeć", y="Saldo migracji wewnętrznych", title = "Porównanie salda migracji w Polsce ze względu na płeć", fill="Płeć")
+  
+  
+```
+
+#### Nie widać znaczących różnic w poziomie migracji wewnętrznej ze względu na płeć.
+
+## Ocena ilości małżeństw w każdym z województw w Polsce
+
+```{r}
+ggplot(migracje_filtrowane2, aes(x=Małżeństwa))+
+  geom_histogram(binwidth = 750, fill = "#5F9EA0")+
+  theme_minimal()+
+  labs(title = "Ilość małżeństw w Polsce w każdym z województw", y="Ilość województw w danym przedziale", x="Ilość małżeństw")
+```
+
+#### Najwięcej województw ma ilość małżeństw w przedziale między 2500 a 7500.

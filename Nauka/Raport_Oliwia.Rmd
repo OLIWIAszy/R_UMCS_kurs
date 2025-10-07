@@ -1,0 +1,99 @@
+---
+title: "Raport"
+author: "Oliwia Szykuła"
+date: "2025-07-06"
+output: html_document
+---
+
+# **Raport z zadań**
+
+## Zadanie 1 – Wykres punktowy: masa a cena
+
+### Na podstawie danych *diamonds* stwórz wykres punktowy przedstawiający zależność między masą diamentu (carat) a jego ceną (price). Użyj *geom_point()* oraz stylu *theme_minimal()*
+
+``` {r}
+library(ggplot2)
+data(diamonds)
+
+
+ggplot(diamonds, aes(x=carat, y=price, ))+
+  geom_point(size=3, alpha=.5, color = "pink")+
+  theme_minimal()+
+  labs(x="Karat", y="Cena")
+
+```
+
+
+### Wraz ze wzrostem ilości karatów proporcjonalnie rośnie cena diamentu
+
+## Zadanie 2 – Kolorowanie punktów wg jakości szlifu
+
+### Zmodyfikuj wykres z poprzedniego zadania tak, aby kolor punktów odpowiadał jakości szlifu (*cut*). Pozwoli to lepiej zobaczyć, jak jakość wpływa na rozkład cen i masy.
+
+``` {r}
+
+ggplot(diamonds, aes(x=carat, y=price, color=cut))+
+  geom_point(size=3, alpha=.5)+
+  theme_minimal()+
+  labs(x="Karat", y="Cena", color = "Jakość szlifu")
+```
+
+
+### Im większa liczba karatów w danym przedziale cenowym, tym niższa jakość szlifu. Wniosek: Lepiej kupować w wyższej cenie, jeśli chcemy mieć wysoką jakość produktu
+
+## Zadanie 3 – Gradient kolorów wg głębokości
+
+### Stwórz wykres punktowy carat względem price, w którym kolor punktu odzwierciedla wartość zmiennej depth. Zastosuj ciągły gradient kolorów, np. *scale_color_gradient()*.
+
+``` {r}
+
+ggplot(diamonds, aes(x=carat, y=price, color=depth))+
+  geom_point(size=3, alpha=.5)+
+  theme_minimal()+
+  labs(x="Karat", y="Cena", color = "Głębokość")+
+  scale_colour_gradient(low="blue", high="magenta")
+```
+### Nie było diamentów o bardzo wysokiej głębokości, większość plasowała się w granicach średnich.
+
+## Zadanie 4 – Histogram cen
+
+### Sporządź histogram pokazujący rozkład cen (*price*) wszystkich diamentów. Zastosuj sensowną szerokość przedziałów (np. *binwidth* = 500), aby wykres był czytelny i szczegółowy.
+
+``` {r}
+ggplot(diamonds, aes(x=price))+
+  geom_histogram(binwidth = 500,
+                 color="pink",
+                 fill="magenta")+
+  theme_minimal()+
+  labs(x="cena [PLN]", y="Ilość diamentów w danej cenie")
+```
+
+### Najwięcej jest diamentów w najniższej cenie.
+
+## Zadanie 5 – Wykres pudełkowy wg jakości szlifu
+
+### Utwórz wykres pudełkowy (*boxplot*), który porównuje rozkład cen (price) dla różnych klas jakości szlifu (*cut*). Zadbaj o czytelne oznaczenie osi i sensowny dobór kolorów.
+
+``` {r}
+ggplot(diamonds, aes(x=price, y=cut, fill=factor(cut)))+
+  geom_boxplot()+
+  theme_minimal()+
+  labs(x="Cena", y="jakość szlifu", fill="Jakość")
+```
+
+### Jest dużo diamentów, które zaburzają statystykę, jednak co ciekawe jest dużo diamentów o idealnej jakości w niskiej cenie.
+
+## Zadanie 6 – Facetowanie wg koloru
+
+### Stwórz wykres punktowy *carat* względem *price*, podzielony na osobne panele dla każdej kategorii zmiennej *color*. Użyj *facet_wrap(\~ color)*.
+
+``` {r}
+ggplot(diamonds, aes(y=price, x=carat))+
+  geom_point(color = "magenta")+
+  facet_wrap(~ color)+
+  theme_minimal()+
+  labs(x="Cena", y="Ilość karatów")
+
+```
+
+### Jest mniej więcej tyle samo diamentów w każdym kolorze.
